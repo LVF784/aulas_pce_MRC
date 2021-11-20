@@ -3,7 +3,7 @@ close all
 clc
 
 %% Conversor Flyback
-% Par‚metros
+% Par√¢metros
 Vin = 100;
 Nt = 1/2;
 C = 47*10^(-6);
@@ -15,7 +15,7 @@ Po = 100;
 Ro = Vo^2/Po;
 D = Nt*Vo/(Vin + Nt*Vo);
 
-%% Modelo completo em tempo contÌnuo
+%% Modelo completo em tempo cont√≠nuo
 s = tf('s');
 Gd0 = Vo/(D*(1-D));
 w0 = Nt*(1-D)/sqrt(Lm*C);
@@ -30,29 +30,29 @@ G = Kpwm*H*G;          %incluindo ganho do sensor e pwm
 % Settling time (ts) em malha aberta (MA)
 stepG = stepinfo(G);
 settling_time_G = stepG.SettlingTime;
-fprintf('O ts em malha aberta È de %f \n',settling_time_G)
+fprintf('O ts em malha aberta √© de %f \n',settling_time_G)
 
-%% Modelo de referÍncia
+%% Modelo de refer√™ncia
 % Objetivos: 
 % (1) Erro nulo em regime permanente
-% (2) Settling time 10% mais r·pido que em malha aberta
+% (2) Settling time 10% mais r√°pido que em malha aberta
 % (3) Sobressinal nulo para a resposta ao degrau
 
-% Note que È necess·rio incluir 1 ou mais polos em Td para que a ordem
-% relativa seja igual ‡ de G
+% Note que √© necess√°rio incluir 1 ou mais polos em Td para que a ordem
+% relativa seja igual √† de G
 
-% TambÈm note a presenÁa de um zero de Fase N„o MÌnima (FNM) em G, sendo
-% necess·rio o incluir no modelo de referÍncia Td
+% Tamb√©m note a presen√ßa de um zero de Fase N√£o M√≠nima (FNM) em G, sendo
+% necess√°rio o incluir no modelo de refer√™ncia Td
 
 % Garantindo (2)
-xp = 10;                        %10% mais r·pido
+xp = 10;                        %10% mais r√°pido
 settling_time_Td = settling_time_G*((100-xp)/100);
 p1 = -4/(settling_time_Td);
 
 % Zero de FNM
 z1 = roots(G.Num{1});
 
-% Polo n„o dominante
+% Polo n√£o dominante
 p2 = p1*10;
 
 % Montando a Td
@@ -64,34 +64,34 @@ stepTd = stepinfo(Td);
 settling_time_Td = stepTd.SettlingTime;
 times = settling_time_G/settling_time_Td;
 percent = 100-100/times;
-fprintf('Checando condiÁ„o (2) \n')
-fprintf('O ts de Td È ~%0.1f%% mais r·pido que em MA \n',percent)
+fprintf('Checando condi√ß√£o (2) \n')
+fprintf('O ts de Td √© ~%0.1f%% mais r√°pido que em MA \n',percent)
 
 %% Checando (1) - Td(s=0) = 1
 Td_0 = evalfr(Td,0);
-fprintf('\nChecando condiÁ„o (1) \n')
+fprintf('\nChecando condi√ß√£o (1) \n')
 fprintf('Td(s=0) = %0.1f \n',Td_0)
 
-% N„o deu certo, portanto, conserta-se da seguinte forma
+% N√£o deu certo, portanto, conserta-se da seguinte forma
 Td = Td/(evalfr(Td,0));
-fprintf('\nO Td novo È:')
+fprintf('\nO Td novo √©:')
 Td = zpk(Td)
 
-% A condiÁ„o (3) pode ser checada analiticamente. Sabendo que sÛ temos
-% polos reais em Td, o sobressinal ser· nulo. Podemos
+% A condi√ß√£o (3) pode ser checada analiticamente. Sabendo que s√≥ temos
+% polos reais em Td, o sobressinal ser√° nulo. Podemos
 % comprovar olhando para o degrau aplicado a Td
 figure(1)
 step(Td)
-% Note que a resposta ao degrau inicia na direÁ„o oposta. Esta
-% caracterÌstica ocorre pela presenÁa de zeros de fase n„o mÌnima.
+% Note que a resposta ao degrau inicia na dire√ß√£o oposta. Esta
+% caracter√≠stica ocorre pela presen√ßa de zeros de fase n√£o m√≠nima.
 
 %% Controlador ideal (MRC)
-% Utilizando a express„o 8 do mÛdulo MRC, obtemos o seguinte controlador:
+% Utilizando a express√£o de Cd(s) do m√≥dulo MRC, obtemos o seguinte controlador:
 Cd = minreal(Td/(G*(1-Td)),1e-3)
 
-% Obs.: minreal(.) È uma funÁ„o que elimina polos e zeros que estejam
-% prÛximos suficiente ao ponto de se cancelarem. O valor de precis„o
-% escolhido È de 1e-3.
+% Obs.: minreal(.) √© uma fun√ß√£o que elimina polos e zeros que estejam
+% pr√≥ximos suficiente ao ponto de se cancelarem. O valor de precis√£o
+% escolhido √© de 1e-3.
 
 %% Fechando a malha com o controlador projetado
 T = Cd*G/(1+Cd*G);
@@ -109,15 +109,15 @@ stepTd = stepinfo(T);
 settling_time_T = stepTd.SettlingTime;
 times_T = settling_time_G/settling_time_T;
 percent_T = 100-100/times_T;
-fprintf('O ts em malha aberta È de %f\n',settling_time_G)
-fprintf('O ts em malha fechada È de %f\n',settling_time_T)
-fprintf('Sendo %.1f%% mais r·pido para a malha fechada \n',percent_T)
+fprintf('O ts em malha aberta √© de %f\n',settling_time_G)
+fprintf('O ts em malha fechada √© de %f\n',settling_time_T)
+fprintf('Sendo %.1f%% mais r√°pido para a malha fechada \n',percent_T)
 
 % Margem de ganho e margem de fase
 figure(3)
 margin(T)
 
 % Note que diferentemente do caso do conversor Forward e do modelo
-% simplificado do conversor Flyback, a margem de ganho È menor (14.8 dB).
-% Essa limitaÁ„o de robustez È causada pela presenÁa de zeros de fase n„o
-% mÌnima.
+% simplificado do conversor Flyback, a margem de ganho √© menor (14.8 dB).
+% Essa limita√ß√£o de robustez √© causada pela presen√ßa de zeros de fase n√£o
+% m√≠nima.
